@@ -1,0 +1,49 @@
+﻿@page "/upload"
+@using PdfReaderBlazorAppServer.Models
+@using PdfReaderBlazorAppServer.Services
+@rendermode InteractiveServer
+
+<InputFile OnChange="HandleFileSelected" />
+
+@if (parsedData != null)
+{
+    <div class="form">
+        <label>Nom:</label>
+        <input type="text" @bind="parsedData.Nom" />
+
+        <label>Date:</label>
+        <input type="text" @bind="parsedData.Date" />
+
+        <label>Montant:</label>
+        <input type="text" @bind="parsedData.Montant" />
+
+        <label>Numéro:</label>
+        <input type="text" @bind="parsedData.Numero" />
+    </div>
+
+    <pre>@extractedText</pre>
+}
+
+@code {
+    private ParsedDocumentData? parsedData;
+    private string? extractedText;
+
+    [Inject]
+    private PdfProcessingService PdfService { get; set; } = default!;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file is null) return;
+
+        using var stream = file.OpenReadStream(10 * 1024 * 1024);
+        var result = await PdfService.UploadFileAsync(stream, file.Name);
+
+        if (result != null)
+        {
+            extractedText = result.Text;
+            parsedData = result.Data;
+        }
+        InvokeAsync(StateHasChanged);
+    }
+}
