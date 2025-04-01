@@ -1,7 +1,88 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+@using PdfReaderBlazorAppServer.Models
+@using PdfReaderBlazorAppServer.Services
+@rendermode InteractiveServer
 
-<h1>Hello, world!</h1>
 
-Welcome to your new app.
+<style>
+    .form {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.5rem 1rem;
+        max-width: 500px;
+        margin-top: 1rem;
+        padding: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        background-color: #f9f9f9;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+        font-weight: 600;
+        align-self: center;
+    }
+
+    input[type="text"] {
+        padding: 0.3rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 100%;
+    }
+
+    pre {
+        margin-top: 2rem;
+        background-color: #f0f0f0;
+        padding: 1rem;
+        border-radius: 8px;
+        white-space: pre-wrap;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+</style>
+
+<InputFile OnChange="HandleFileSelected" />
+
+@if (parsedData != null)
+{
+    <div class="form">
+        <label>Nom :</label>
+        <input type="text" @bind="parsedData.Nom" />
+
+        <label>Date :</label>
+        <input type="text" @bind="parsedData.Date" />
+
+        <label>Montant :</label>
+        <input type="text" @bind="parsedData.Montant" />
+
+        <label>Numéro :</label>
+        <input type="text" @bind="parsedData.Numero" />
+    </div>
+
+    <pre>@extractedText</pre>
+}
+
+@code {
+    private ParsedDocumentData? parsedData;
+    private string? extractedText;
+
+    [Inject]
+    private PdfProcessingService PdfService { get; set; } = default!;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file is null) return;
+
+        using var stream = file.OpenReadStream(10 * 1024 * 1024);
+        var result = await PdfService.UploadFileAsync(stream, file.Name);
+
+        if (result != null)
+        {
+            extractedText = result.Text;
+            parsedData = result.Data;
+        }
+        InvokeAsync(StateHasChanged);
+    }
+}

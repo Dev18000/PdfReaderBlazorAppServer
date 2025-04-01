@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using UglyToad.PdfPig;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -68,8 +67,8 @@ namespace PdfReaderBlazorAppServer.Controllers
 
             var processInfo = new ProcessStartInfo
             {
-                FileName = @"C:\Tools\Tesseract\tesseract.exe", // <-- Тут укажешь свой путь к Tesseract Portable
-                Arguments = $"\"{tempFile}\" stdout -l fra",   // -l fra = французский язык
+                FileName = @"C:\Tools\Tesseract\tesseract.exe", 
+                Arguments = $"\"{tempFile}\" stdout -l fra",  
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
@@ -88,10 +87,10 @@ namespace PdfReaderBlazorAppServer.Controllers
         {
             var data = new ParsedDocumentData();
 
-            data.Nom = ExtractField(text, @"(?<=Nom\s?:\s?).+?$");
-            data.Date = ExtractField(text, @"\b\d{2}/\d{2}/\d{4}\b");  // ищем дату формата 12/03/2025
-            data.Montant = ExtractField(text, @"(?<=Montant\s?:\s?)\d+([.,]\d{2})?€?");
-            data.Numero = ExtractField(text, @"(?<=Numero\s?:\s?).+?$");
+            data.Nom = ExtractField(text, @"(?<=Nom\s?:?\s?)(.*?)(?=\s+Date)");
+            data.Date = ExtractField(text, @"(?<=Date\s?:?\s?)\d{2}/\d{2}/\d{4}");
+            data.Montant = ExtractField(text, @"(?<=Montant\s?:?\s?)\d+([.,]\d{2})?\s?€?");
+            data.Numero = ExtractField(text, @"(?<=Numero\s?:?\s?)[^\r\n]+");
 
             return data;
         }
